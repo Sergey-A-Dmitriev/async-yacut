@@ -37,10 +37,15 @@ pytest-env==0.6.2
 pytest-tornasync==0.6.0.post2
 python-dateutil==2.8.2
 python-dotenv==1.0.0
+PyYAML==6.0.3
+requests==2.32.3
 six==1.16.0
 SQLAlchemy==2.0.21
+swagger-ui-py==25.7.1
 tomli==2.0.1
+tornado==6.5.7
 typing_extensions==4.11.0
+urllib3==2.7.0
 Werkzeug==3.0.0
 WTForms==3.0.1
 yarl==1.9.9

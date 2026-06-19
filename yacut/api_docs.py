@@ -1,0 +1,7 @@
+from swagger_ui import api_doc
+
+from . import app
+
+api_doc(app,
+        config_path='./yacut/static/docs/openapi.yml',
+        url_prefix='/doc')

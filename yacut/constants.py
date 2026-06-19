@@ -1,0 +1,4 @@
+SHORT_ID_LENGTH = 6
+SHORT_ID_MAX_LENGTH = 16
+REGEX = r'[A-Za-z0-9]+'
+RESERVED_SHORTS = ('files', 'api')
