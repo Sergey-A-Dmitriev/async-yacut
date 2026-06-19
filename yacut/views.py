@@ -1,6 +1,7 @@
-from flask import abort, redirect, render_template, request
+from flask import abort, redirect, render_template
 
 from . import app
+from .exceptions import ObjectCreateError
 from .forms import LoadForm, MainForm
 from .models import URLMap
 from .yandexdisk import async_upload_files_to_yandexdisk
@@ -14,7 +15,7 @@ def index():
             url_map = URLMap.create(
                 original=form.original_link.data,
                 short=form.custom_id.data or None)
-        except URLMap.ObjectCreateError as exc:
+        except ObjectCreateError as exc:
             form.custom_id.errors.append(str(exc))
             return render_template(
                 'index.html',
@@ -22,7 +23,7 @@ def index():
         return render_template(
             'index.html',
             form=form,
-            short_link=request.host_url + url_map.short)
+            short_link=url_map.get_short_url())
     return render_template(
         'index.html',
         form=form)
@@ -31,17 +32,25 @@ def index():
 @app.route('/files', methods=['GET', 'POST'])
 async def files_view():
     form = LoadForm()
+
     if not form.validate_on_submit():
         return render_template('upload.html', form=form)
+
+    uploaded_files = await async_upload_files_to_yandexdisk(
+        form.files.data)
+    short_urls_and_filenames = []
+    for file_info in uploaded_files:
+        url_map = URLMap.create(file_info['url'])
+
+        short_urls_and_filenames.append(
+            {
+                'filename': file_info['filename'],
+                'short_link': url_map.get_short_url(),
+            })
     return render_template(
         'upload.html',
         form=form,
-        short_urls_and_filenames=[
-            dict(short_url=URLMap.create(file_info['url']).
-                 get_unique_short_id(),
-                 filename=file_info['filename']
-                 ) for file_info in await async_upload_files_to_yandexdisk(
-                     form.files.data)])
+        short_urls_and_filenames=short_urls_and_filenames)
 
 
 @app.route('/<string:short>', methods=['GET'])

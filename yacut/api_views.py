@@ -4,6 +4,7 @@ from flask import jsonify, request
 
 from . import app
 from .error_handlers import InvalidAPIUsage
+from .exceptions import ObjectCreateError, ShortGenerateError
 from .models import URLMap
 
 
@@ -28,12 +29,6 @@ def add_url_map():
         url_map = URLMap.create(
             data['url'],
             data.get('custom_id'))
-
-        return jsonify(
-            {
-                'url': url_map.original,
-                'short_link': request.host_url + url_map.short
-            }
-        ), HTTPStatus.CREATED
-    except (URLMap.ObjectCreateError, URLMap.ShortGenerateError) as exc:
+        return jsonify(url_map.to_dict()), HTTPStatus.CREATED
+    except (ObjectCreateError, ShortGenerateError) as exc:
         raise InvalidAPIUsage(str(exc))
