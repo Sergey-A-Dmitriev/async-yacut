@@ -1,7 +1,7 @@
-from flask import abort, redirect, render_template
+from flask import abort, flash, redirect, render_template
 
 from . import app
-from .exceptions import ObjectCreateError
+from .exceptions import ObjectCreateError, ShortGenerateError
 from .forms import LoadForm, MainForm
 from .models import URLMap
 from .yandexdisk import async_upload_files_to_yandexdisk
@@ -15,7 +15,7 @@ def index():
             url_map = URLMap.create(
                 original=form.original_link.data,
                 short=form.custom_id.data or None)
-        except ObjectCreateError as exc:
+        except (ObjectCreateError, ShortGenerateError) as exc:
             form.custom_id.errors.append(str(exc))
             return render_template(
                 'index.html',
@@ -40,8 +40,12 @@ async def files_view():
         form.files.data)
     short_urls_and_filenames = []
     for file_info in uploaded_files:
-        url_map = URLMap.create(file_info['url'])
-
+        try:
+            url_map = URLMap.create(file_info['url'])
+        except ObjectCreateError as exc:
+            flash('Не удалось создать короткую ссылку для '
+                  f'{file_info["filename"]}: {exc}')
+            continue
         short_urls_and_filenames.append(
             {
                 'filename': file_info['filename'],
